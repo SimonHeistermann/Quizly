@@ -113,7 +113,7 @@ _whisper_model = None
 def get_whisper_model():
     """
     Caches the Whisper model in-process so we don't reload it for every request.
-    Configure via settings.WHISPER_MODEL (default: 'turbo').
+    Configure via settings.WHISPER_MODEL (default: 'small').
     """
     global _whisper_model
 
@@ -121,7 +121,7 @@ def get_whisper_model():
         print("[whisper] using cached model", flush=True)
         return _whisper_model
 
-    model_name: str = getattr(settings, "WHISPER_MODEL", "turbo")
+    model_name: str = getattr(settings, "WHISPER_MODEL", "small")
     download_root_raw = getattr(settings, "WHISPER_DOWNLOAD_ROOT", "")
     download_root = str(download_root_raw).strip()
 

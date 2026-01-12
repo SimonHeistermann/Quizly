@@ -25,7 +25,7 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 # Whisper
-WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "turbo")
+WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
 WHISPER_DOWNLOAD_ROOT = os.environ.get("WHISPER_DOWNLOAD_ROOT", "")
 
 

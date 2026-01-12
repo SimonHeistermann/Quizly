@@ -1,4 +1,5 @@
 import json
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -44,7 +45,7 @@ def test_cleanup_audio_calls_safe_remove_for_base_and_mp3():
 
 def test_get_whisper_model_caches_model_and_uses_settings_model_name(settings):
     utils._whisper_model = None
-    settings.WHISPER_MODEL = "turbo"
+    settings.WHISPER_MODEL = "small"
 
     with patch("apps.quiz_management_app.utils.whisper.load_model") as load_model:
         fake_model = MagicMock()
@@ -55,7 +56,7 @@ def test_get_whisper_model_caches_model_and_uses_settings_model_name(settings):
 
         assert m1 is fake_model
         assert m2 is fake_model
-        load_model.assert_called_once_with("turbo")
+        load_model.assert_called_once_with("small")
 
 
 def test_generate_transcript_on_error_cleans_up_and_raises_quizcreationerror():
@@ -223,7 +224,6 @@ def test_create_quiz_from_url_always_cleans_up_temp_audio_on_exception(settings,
 @pytest.mark.django_db
 def test_persist_quiz_creates_quiz_and_bulk_questions(django_user_model):
     user = django_user_model.objects.create_user(username="u2", email="u2@x.de", password="Password123!")
-
     payload = {
         "title": "Quiz title",
         "description": "Quiz description",
@@ -236,10 +236,9 @@ def test_persist_quiz_creates_quiz_and_bulk_questions(django_user_model):
             for i in range(10)
         ],
     }
-
     quiz = utils._persist_quiz(payload, "https://www.youtube.com/watch?v=xyz", user)
-
     assert isinstance(quiz, Quiz)
-    assert quiz.user_id == user.id
-    assert quiz.questions.count() == 10
+    quiz_any = cast(Any, quiz)
+    assert quiz_any.user_id == user.id
+    assert quiz_any.questions.count() == 10
     assert QuizQuestion.objects.filter(quiz=quiz).count() == 10
