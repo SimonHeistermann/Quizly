@@ -330,29 +330,64 @@ python manage.py runserver
 
 ### 📁 Project Structure (simplified)
 ```bash
-backend/
+Quizly/
 │
-├── apps/
-│   ├── user_auth_app/
-│   │   ├── api/
-│   │   ├── tests/
-│   │   └── utils.py
+├── apps/                                # Domain-driven Django apps (feature-based structure)
 │   │
-│   └── quiz_management_app/
-│       ├── api/
-│       ├── tests/
-│       ├── models.py
-│       ├── admin.py
-│       └── utils.py
+│   ├── user_auth_app/                  # User authentication & authorization domain
+│   │   │                                 # (e.g. registration, login, JWT, cookies, permissions)
+│   │   │
+│   │   ├── api/                        # REST API layer (Django REST Framework)
+│   │   │   ├── serializers.py          # DRF serializers (validation, transformation, I/O schemas)
+│   │   │   ├── views.py                # API views / viewsets (endpoint logic)
+│   │   │   ├── urls.py                 # App-specific API routes
+│   │   │   ├── permissions.py          # Custom permission classes (if applicable)
+│   │   │   └── ...                     # Optional: filters.py, pagination.py, schemas.py, etc.
+│   │   │
+│   │   ├── tests/                      # Automated tests for this app
+│   │   │   ├── test_api.py             # API tests (auth flows, status codes, responses)
+│   │   │   ├── test_services.py        # Business-logic tests (if using a service layer)
+│   │   │   └── ...                     # Optional: factories/, fixtures/, mocks/
+│   │   │
+│   │   ├── utils.py                    # Reusable helper functions
+│   │   │                                 # (e.g. JWT cookie helpers, token utilities)
+│   │   ├── models.py                  # Database models (User, Profile, etc. if applicable)
+│   │   ├── apps.py                    # Django AppConfig
+│   │   └── __init__.py
+│   │
+│   └── quiz_management_app/            # Quiz / domain-specific business logic
+│       │                                 # (quizzes, questions, answers, scoring, etc.)
+│       │
+│       ├── api/                        # REST API layer for quiz management
+│       │   ├── serializers.py          # Quiz-related serializers
+│       │   ├── views.py                # Quiz endpoints (CRUD, participation, results)
+│       │   ├── urls.py                 # Quiz API routes
+│       │   └── ...                     # Optional API helpers
+│       │
+│       ├── tests/                      # Tests for quiz functionality
+│       │   ├── test_models.py          # Model tests (relations, constraints)
+│       │   ├── test_api.py             # API tests (quiz flows, permissions)
+│       │   └── ...
+│       │
+│       ├── models.py                  # Quiz-related database models
+│       ├── admin.py                   # Django admin configuration
+│       ├── utils.py                   # Quiz-specific helper functions
+│       ├── apps.py                    # Django AppConfig
+│       └── __init__.py
 │
-├── core/
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
+├── core/                               # Django project configuration (global layer)
+│   │
+│   ├── settings.py                    # Global settings (apps, middleware, DB, auth, DRF config)
+│   ├── urls.py                        # Root URL configuration (includes app-level URLs)
+│   ├── wsgi.py                        # WSGI entry point (used for deployment)
+│   └── asgi.py                        # ASGI entry point (if async / websockets are used)
 │
-├── env-template
-├── requirements.txt
-└── manage.py
+├── env-template                       # Environment variable template (.env example)
+│                                     # Used to document required environment variables
+│
+├── requirements.txt                  # Python dependencies (pinned versions recommended)
+│
+└── manage.py                         # Django management entry point
 ```
 
 ---
