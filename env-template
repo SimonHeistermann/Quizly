@@ -1,0 +1,63 @@
+# ============================================
+# 🌍 ENVIRONMENT CONFIGURATION TEMPLATE
+# Quizly Backend - Django REST API
+# ============================================
+
+# --- SECURITY ---
+SECRET_KEY='your-secret-key-here'
+GEMINI_API_KEY=your-api-key-here
+
+
+# Whisper model selection:
+# - Faster / lower CPU load: tiny, base, small
+# - Balanced: medium
+# - Best quality / slowest on CPU: large, turbo (large-v3-turbo)
+# Recommendation:
+# - Use "small" for local development on most laptops (much faster).
+# - Use "turbo" only if you have a strong CPU/GPU and can wait longer.
+# Note: The first run may download the model (~GB) into WHISPER_DOWNLOAD_ROOT (cache).
+WHISPER_MODEL=small
+DEBUG=True
+
+# --- HOSTS ---
+ALLOWED_HOSTS=127.0.0.1,localhost
+
+# --- Cookies ---
+
+# True for production
+SECURE_COOKIES=False
+
+# Set to "None" for cross-site cookies (requires SECURE_COOKIES=True in modern browsers)
+JWT_COOKIE_SAMESITE=Lax
+
+JWT_COOKIE_DOMAIN=
+
+# Optional: deploy under subpath (e.g. /quizly)
+# FORCE_SCRIPT_NAME=/quizly
+
+# --- DATABASE ---
+# SQLite (default)
+DATABASE_URL=sqlite:///db.sqlite3
+# PostgreSQL example:
+# DATABASE_URL=postgres://user:password@host:port/dbname
+
+# --- STATIC & MEDIA ---
+STATIC_URL=static/
+MEDIA_URL=/media/
+
+# --- CORS / CSRF ---
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
+CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
+
+# --- DJANGO SETTINGS ---
+LANGUAGE_CODE=en-us
+TIME_ZONE=Europe/Berlin
+
+# ============================================
+# ✅ Notes:
+# - This file is a template.
+# - Create your own `.env` file in the backend root:
+#     cp env-template .env
+# - Always replace SECRET_KEY, DEBUG, and ALLOWED_HOSTS as needed.
+# - Never commit your actual `.env` file to version control!
+# ============================================
