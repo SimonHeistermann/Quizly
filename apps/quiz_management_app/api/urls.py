@@ -1,3 +1,12 @@
+"""
+URL routing for the quiz management API.
+
+This module defines endpoints to:
+- create quizzes from a YouTube URL
+- list quizzes for the authenticated user
+- retrieve, update, or delete a specific quiz
+"""
+
 from django.urls import path
 
 from .views import CreateQuizView, QuizDetailView, QuizListView

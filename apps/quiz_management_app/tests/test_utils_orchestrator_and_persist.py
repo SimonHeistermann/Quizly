@@ -1,3 +1,12 @@
+"""
+Orchestrator and persistence tests for quiz generation.
+
+Focuses on create_quiz_from_url behavior, including:
+- rejecting invalid URLs
+- successful orchestration with mocked external steps
+- mapping lower-level errors into QuizCreationError
+"""
+
 import pytest
 from types import SimpleNamespace
 from typing import Any, cast
@@ -12,6 +21,9 @@ from apps.quiz_management_app.utils import (
 
 
 def _payload():
+    """
+    Return a valid quiz payload used across orchestration tests.
+    """
     return {
         "title": "Generated Title",
         "description": "Generated Desc",
@@ -24,6 +36,10 @@ def _payload():
 
 @pytest.mark.django_db
 class TestCreateQuizFromUrl:
+    """
+    Tests for the end-to-end create_quiz_from_url orchestration function.
+    """
+
     def test_rejects_non_youtube_url(self, user):
         with pytest.raises(InvalidYouTubeUrlError):
             create_quiz_from_url("https://vimeo.com/123", user)

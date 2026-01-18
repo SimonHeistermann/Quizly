@@ -1,3 +1,10 @@
+"""
+Django admin configuration for user accounts.
+
+Registers a clean admin view for the User model, primarily for development
+and debugging purposes.
+"""
+
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin

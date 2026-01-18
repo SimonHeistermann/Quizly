@@ -1,3 +1,9 @@
+"""
+Model behavior tests for the quiz management app.
+
+Primarily validates __str__ representations for admin/debug readability.
+"""
+
 import pytest
 
 from apps.quiz_management_app.models import Quiz, QuizQuestion
@@ -5,6 +11,10 @@ from apps.quiz_management_app.models import Quiz, QuizQuestion
 
 @pytest.mark.django_db
 class TestModels:
+    """
+    Tests for Quiz and QuizQuestion model representations.
+    """
+
     def test_quiz_str(self, user):
         quiz = Quiz.objects.create(
             title="My Quiz",

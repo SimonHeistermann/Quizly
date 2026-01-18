@@ -1,3 +1,13 @@
+"""
+URL routing for the user authentication API.
+
+Defines endpoints for:
+- registration
+- login (JWT in cookies)
+- logout (clears cookies / blacklists refresh token best-effort)
+- refresh access token (requires refresh token cookie)
+"""
+
 from django.urls import path
 
 from .views import (

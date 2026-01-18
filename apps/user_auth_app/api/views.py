@@ -1,3 +1,13 @@
+"""
+API views for the user authentication app.
+
+Implements a cookie-based JWT authentication flow using SimpleJWT:
+- user registration
+- login (issues access/refresh tokens as HttpOnly cookies)
+- logout (clears cookies and best-effort blacklists refresh token)
+- token refresh (requires a valid refresh token cookie)
+"""
+
 import logging
 from typing import Any, Optional, cast
 
@@ -21,10 +31,19 @@ User = get_user_model()
 
 
 class RegistrationView(CreateAPIView):
+    """
+    Register a new user account.
+
+    Validates registration input and creates the user via RegistrationSerializer.
+    """
+
     permission_classes = [AllowAny]
     serializer_class = RegistrationSerializer
 
     def create(self, request, *args, **kwargs):
+        """
+        Handle POST requests for user registration.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -32,9 +51,21 @@ class RegistrationView(CreateAPIView):
 
 
 class CookieTokenObtainPairView(APIView):
+    """
+    Authenticate a user and set JWT tokens as cookies.
+
+    Accepts either email or username as identifier and a password.
+    On success, returns basic user info and sets access/refresh cookies.
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Handle POST requests for login.
+
+        Expects "email" or "username" and "password" in the request body.
+        """
         identifier = request.data.get("email") or request.data.get("username")
         password = request.data.get("password")
 
@@ -64,6 +95,12 @@ class CookieTokenObtainPairView(APIView):
         return response
 
     def _authenticate(self, identifier: str, password: str) -> Optional[AbstractBaseUser]:
+        """
+        Authenticate a user using either email or username.
+
+        If identifier contains "@", it is treated as an email and resolved to a username,
+        since Django's default authenticate() uses username by default.
+        """
         if "@" in identifier:
             user_obj = User.objects.filter(email__iexact=identifier).first()
             if not user_obj:
@@ -73,9 +110,19 @@ class CookieTokenObtainPairView(APIView):
 
 
 class LogoutView(APIView):
+    """
+    Log out the authenticated user.
+
+    Performs best-effort refresh token blacklisting (if present) and clears
+    JWT cookies from the response.
+    """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Handle POST requests for logout.
+        """
         refresh_token = request.COOKIES.get("refresh_token")
         if isinstance(refresh_token, str) and refresh_token.strip():
             self._blacklist_refresh(refresh_token)
@@ -90,6 +137,7 @@ class LogoutView(APIView):
     def _blacklist_refresh(self, token: str) -> None:
         """
         Best-effort refresh token blacklist.
+
         Logout should still succeed even if token is expired/invalid/already blacklisted.
         """
         token = token.strip()
@@ -107,9 +155,19 @@ class LogoutView(APIView):
 
 
 class CookieTokenRefreshView(TokenRefreshView):
+    """
+    Refresh an access token using the refresh token stored in cookies.
+
+    Requires AuthenticatedViaRefreshToken permission, then validates the refresh
+    token and sets a new access token cookie.
+    """
+
     permission_classes = [AuthenticatedViaRefreshToken]
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to refresh the access token via refresh token cookie.
+        """
         refresh_token = request.COOKIES.get("refresh_token")
         serializer = self.get_serializer(data={"refresh": refresh_token})
 

@@ -1,3 +1,14 @@
+"""
+Additional utility tests for the quiz creation pipeline.
+
+This module focuses on higher-value branches and edge cases, including:
+- cleanup behavior on failures
+- Whisper model caching and transcription error handling
+- Gemini client configuration and JSON parsing safety nets
+- payload validation negative paths
+- orchestrator finally-cleanup behavior and persistence logic
+"""
+
 import json
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
@@ -12,6 +23,7 @@ from apps.quiz_management_app.models import Quiz, QuizQuestion
 # -----------------------------------------------------------------------------
 # Download / cleanup branches
 # -----------------------------------------------------------------------------
+
 
 def test_download_audio_from_video_on_error_cleans_up_and_raises_quizcreationerror():
     tmp = utils.TempAudio(base_path="/tmp/fake-audio")
@@ -42,6 +54,7 @@ def test_cleanup_audio_calls_safe_remove_for_base_and_mp3():
 # -----------------------------------------------------------------------------
 # Whisper caching + error handling branches
 # -----------------------------------------------------------------------------
+
 
 def test_get_whisper_model_caches_model_and_uses_settings_model_name(settings):
     utils._whisper_model = None
@@ -81,6 +94,7 @@ def test_generate_transcript_on_error_cleans_up_and_raises_quizcreationerror():
 # Gemini client + JSON parsing branches
 # -----------------------------------------------------------------------------
 
+
 def test_gemini_client_missing_key_raises_quizcreationerror(settings):
     if hasattr(settings, "GEMINI_API_KEY"):
         delattr(settings, "GEMINI_API_KEY")
@@ -108,6 +122,7 @@ def test_parse_quiz_json_invalid_json_raises_quizcreationerror():
 # -----------------------------------------------------------------------------
 # Validation negative branches (high value coverage)
 # -----------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "payload",
@@ -185,6 +200,7 @@ def test_validate_question_rejects_answer_not_in_options():
 # -----------------------------------------------------------------------------
 # Orchestrator finally-cleanup branch + persist branch
 # -----------------------------------------------------------------------------
+
 
 def test_create_quiz_from_url_invalid_url_raises_invalidyoutubourlerror():
     with pytest.raises(utils.InvalidYouTubeUrlError):

@@ -1,3 +1,10 @@
+"""
+Authentication backends for the user authentication app.
+
+Provides a JWT authentication class that reads the access token from an HttpOnly
+cookie, enabling cookie-based authentication with DRF's IsAuthenticated.
+"""
+
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
@@ -8,6 +15,7 @@ User = get_user_model()
 class CookieJWTAuthentication(JWTAuthentication):
     """
     Authenticate using the access_token stored in an HttpOnly cookie.
+
     Compatible with DRF's IsAuthenticated permission.
 
     Behavior:
@@ -16,6 +24,12 @@ class CookieJWTAuthentication(JWTAuthentication):
     """
 
     def authenticate(self, request):
+        """
+        Attempt to authenticate the request using an access token from cookies.
+
+        Returns:
+            Tuple[user, validated_token] on success, otherwise None.
+        """
         raw_token = request.COOKIES.get("access_token")
         if not raw_token:
             return None

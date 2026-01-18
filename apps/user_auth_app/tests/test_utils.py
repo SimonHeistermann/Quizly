@@ -1,3 +1,10 @@
+"""
+Tests for JWT cookie helper utilities.
+
+Covers setting and clearing access/refresh token cookies on DRF responses,
+including verification of expected cookie presence and deletion behavior.
+"""
+
 from django.test import TestCase, override_settings
 from rest_framework.response import Response
 
@@ -9,6 +16,10 @@ from apps.user_auth_app.utils import (
 
 
 class UtilsCookieTests(TestCase):
+    """
+    Tests for cookie helper functions used in the authentication flow.
+    """
+
     @override_settings(SECURE_COOKIES=False, JWT_COOKIE_SAMESITE="Lax", JWT_COOKIE_PATH="/", JWT_COOKIE_DOMAIN=None)
     def test_set_access_and_refresh_cookie(self):
         resp = Response()

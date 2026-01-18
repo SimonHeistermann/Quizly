@@ -1,3 +1,15 @@
+"""
+Utility functions for creating quizzes from YouTube videos.
+
+This module handles the full quiz creation pipeline:
+- validating and normalizing YouTube URLs
+- downloading and extracting audio
+- transcribing audio using Whisper
+- generating quiz content via Gemini
+- validating AI output
+- persisting quizzes and questions to the database
+"""
+
 import json
 import os
 import re
@@ -20,10 +32,19 @@ from apps.quiz_management_app.models import Quiz, QuizQuestion
 # Errors (clean error handling)
 # -----------------------------
 class QuizCreationError(RuntimeError):
+    """
+    Raised when any step of the quiz creation pipeline fails.
+
+    This includes download errors, transcription failures,
+    AI response issues, or invalid quiz payloads.
+    """
     pass
 
 
 class InvalidYouTubeUrlError(ValueError):
+    """
+    Raised when a provided URL is not recognized as a YouTube URL.
+    """
     pass
 
 
@@ -35,6 +56,12 @@ _YT_WATCH_PREFIX = "https://www.youtube.com/watch?v="
 
 
 def normalize_youtube_url(url: str) -> str:
+    """
+    Normalize YouTube URLs into the standard watch format.
+
+    Converts shortened youtu.be URLs into full youtube.com/watch URLs
+    and strips query parameters.
+    """
     url = (url or "").strip()
     if url.startswith(_YT_SHORT_PREFIX):
         base = url.split("?", 1)[0].replace(_YT_SHORT_PREFIX, _YT_WATCH_PREFIX)
@@ -43,6 +70,9 @@ def normalize_youtube_url(url: str) -> str:
 
 
 def is_youtube_url(url: str) -> bool:
+    """
+    Check whether a URL points to YouTube.
+    """
     u = (url or "").lower()
     return "youtube.com/" in u or "youtu.be/" in u
 
@@ -52,20 +82,35 @@ def is_youtube_url(url: str) -> bool:
 # -----------------------------
 @dataclass
 class TempAudio:
+    """
+    Container for temporary audio file paths used during processing.
+    """
+
     base_path: str
 
     @property
     def mp3_path(self) -> str:
+        """
+        Return the expected MP3 file path derived from the base path.
+        """
         return self.base_path + ".mp3"
 
 
 def make_temp_audio() -> TempAudio:
+    """
+    Create a temporary base file for audio downloads.
+
+    The actual audio file will be written by yt-dlp using this base path.
+    """
     tmp = tempfile.NamedTemporaryFile(suffix="", delete=False)
     tmp.close()
     return TempAudio(base_path=tmp.name)
 
 
 def safe_remove(path: str) -> None:
+    """
+    Remove a file if it exists, ignoring any OS-level errors.
+    """
     try:
         os.remove(path)
     except OSError:
@@ -73,6 +118,9 @@ def safe_remove(path: str) -> None:
 
 
 def cleanup_audio(tmp: TempAudio) -> None:
+    """
+    Clean up temporary audio files created during quiz generation.
+    """
     safe_remove(tmp.base_path)
     safe_remove(tmp.mp3_path)
 
@@ -81,12 +129,16 @@ def cleanup_audio(tmp: TempAudio) -> None:
 # Download / Transcribe
 # -----------------------------
 def download_audio_from_video(url: str, tmp: TempAudio) -> None:
+    """
+    Download audio from a YouTube video and convert it to MP3.
+
+    Raises QuizCreationError if the download or conversion fails.
+    """
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": tmp.base_path + ".%(ext)s",
         "quiet": True,
         "noplaylist": True,
-
         "js_runtimes": {
             "node": {},
         },
@@ -112,8 +164,12 @@ _whisper_model = None
 
 def get_whisper_model():
     """
-    Caches the Whisper model in-process so we don't reload it for every request.
-    Configure via settings.WHISPER_MODEL (default: 'small').
+    Load and cache the Whisper model for audio transcription.
+
+    The model is cached in-process to avoid repeated loading.
+    Configuration is read from settings:
+    - WHISPER_MODEL
+    - WHISPER_DOWNLOAD_ROOT
     """
     global _whisper_model
 
@@ -132,9 +188,8 @@ def get_whisper_model():
     if download_root:
         p = Path(download_root)
         print(f"[whisper] download_root exists={p.exists()} is_dir={p.is_dir()}", flush=True)
-        if p.exists() and p.is_dir():
-            pts = sorted([x.name for x in p.glob("*.pt")])
-            print(f"[whisper] .pt files in download_root: {pts[:10]}", flush=True)
+        pts = sorted([x.name for x in p.glob("*.pt")])
+        print(f"[whisper] .pt files in download_root: {pts[:10]}", flush=True)
 
         t0 = time.time()
     print("[whisper] loading model... (this can take a while)", flush=True)
@@ -151,6 +206,12 @@ def get_whisper_model():
 
 
 def generate_transcript(tmp: TempAudio) -> str:
+    """
+    Transcribe an audio file into text using Whisper.
+
+    Returns the cleaned transcript text or raises QuizCreationError
+    if transcription fails or returns invalid data.
+    """
     try:
         model = get_whisper_model()
 
@@ -181,7 +242,7 @@ def generate_transcript(tmp: TempAudio) -> str:
 # -----------------------------
 def gemini_client() -> genai.Client:
     """
-    Creates a Gemini client using settings.GEMINI_API_KEY.
+    Create and return a Gemini client using the API key from settings.
     """
     api_key = getattr(settings, "GEMINI_API_KEY", None)
     if not api_key:
@@ -191,12 +252,10 @@ def gemini_client() -> genai.Client:
 
 def build_quiz_prompt(transcript: str) -> str:
     """
-    Robust prompt that strongly enforces:
-    - JSON only output (no markdown/backticks)
-    - exactly 10 questions
-    - exactly 4 distinct options per question
-    - answer must be one of the options
-    - same language as transcript
+    Build a strict prompt for Gemini to generate a quiz in pure JSON format.
+
+    The prompt enforces schema, language consistency, and validation rules
+    to minimize malformed AI output.
     """
     transcript = (transcript or "").strip()
 
@@ -243,6 +302,9 @@ Transcript:
 
 
 def get_ai_response(transcript: str):
+    """
+    Send the quiz generation prompt to Gemini and return the raw response.
+    """
     client = gemini_client()
     prompt = build_quiz_prompt(transcript)
     return client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
@@ -250,8 +312,9 @@ def get_ai_response(transcript: str):
 
 def extract_json(text: str) -> str:
     """
-    Tries to strip accidental leading text/backticks from the model output.
-    (Should be rare with the strict prompt, but kept as a safety net.)
+    Extract the JSON portion from a model response.
+
+    Removes leading text or backticks that may appear despite strict prompting.
     """
     text = re.sub(r"^[^{]*", "", text or "")
     text = text.replace("`", "").strip()
@@ -259,6 +322,11 @@ def extract_json(text: str) -> str:
 
 
 def parse_quiz_json(text: str) -> Dict[str, Any]:
+    """
+    Parse the AI response text into a Python dictionary.
+
+    Raises QuizCreationError if JSON decoding fails.
+    """
     try:
         return json.loads(extract_json(text))
     except json.JSONDecodeError as e:
@@ -266,6 +334,9 @@ def parse_quiz_json(text: str) -> Dict[str, Any]:
 
 
 def validate_quiz_payload(payload: Dict[str, Any]) -> None:
+    """
+    Validate the structure and constraints of the generated quiz payload.
+    """
     if not isinstance(payload, dict):
         raise QuizCreationError("Invalid quiz payload type.")
 
@@ -282,6 +353,9 @@ def validate_quiz_payload(payload: Dict[str, Any]) -> None:
 
 
 def _validate_question(q: Dict[str, Any]) -> None:
+    """
+    Validate a single quiz question entry.
+    """
     if not isinstance(q, dict):
         raise QuizCreationError("Invalid question payload.")
 
@@ -309,6 +383,12 @@ def _validate_question(q: Dict[str, Any]) -> None:
 # Main orchestrator
 # -----------------------------
 def create_quiz_from_url(url: str, user) -> Quiz:
+    """
+    Orchestrate the full quiz creation workflow from a YouTube URL.
+
+    This includes downloading audio, transcription, AI-based quiz generation,
+    validation, and database persistence.
+    """
     normalized = normalize_youtube_url(url)
     if not is_youtube_url(normalized):
         raise InvalidYouTubeUrlError("Not a YouTube URL.")
@@ -329,6 +409,11 @@ def create_quiz_from_url(url: str, user) -> Quiz:
 
 @transaction.atomic
 def _persist_quiz(payload: Dict[str, Any], video_url: str, user) -> Quiz:
+    """
+    Persist a validated quiz payload and its questions to the database.
+
+    The operation is wrapped in a transaction to ensure consistency.
+    """
     quiz = Quiz.objects.create(
         title=payload["title"],
         description=payload["description"],

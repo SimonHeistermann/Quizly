@@ -1,3 +1,9 @@
+"""
+Tests for the quiz list API endpoint.
+
+Ensures authentication is required and that users can only see their own quizzes.
+"""
+
 import pytest
 from rest_framework import status
 
@@ -6,6 +12,10 @@ from apps.quiz_management_app.models import Quiz
 
 @pytest.mark.django_db
 class TestQuizListEndpoint:
+    """
+    Test suite for GET /api/quizzes/.
+    """
+
     url = "/api/quizzes/"
 
     def test_requires_auth(self, api_client):

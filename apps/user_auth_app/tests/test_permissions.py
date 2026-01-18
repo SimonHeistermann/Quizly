@@ -1,3 +1,11 @@
+"""
+Permission tests for refresh-token-based authentication.
+
+Validates that AuthenticatedViaRefreshToken:
+- denies access when the refresh token cookie is missing or invalid
+- allows access when the refresh token cookie is present and valid
+"""
+
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
@@ -10,10 +18,18 @@ User = get_user_model()
 
 
 class DummyView(APIView):
+    """
+    Minimal view used to exercise permission logic in isolation.
+    """
+
     permission_classes = [AuthenticatedViaRefreshToken]
 
 
 class AuthenticatedViaRefreshTokenTests(TestCase):
+    """
+    Tests for the AuthenticatedViaRefreshToken permission class.
+    """
+
     def setUp(self):
         self.factory = APIRequestFactory()
         self.permission = AuthenticatedViaRefreshToken()

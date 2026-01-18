@@ -1,3 +1,12 @@
+"""
+Validation and parsing tests for AI-generated quiz payloads.
+
+Covers:
+- parsing JSON responses into Python objects
+- validating schema constraints and required counts
+- error messages for common invalid cases
+"""
+
 import pytest
 import json
 
@@ -9,6 +18,9 @@ from apps.quiz_management_app.utils import (
 
 
 def _good_payload():
+    """
+    Return a minimal valid quiz payload used across validation tests.
+    """
     return {
         "title": "T",
         "description": "D",

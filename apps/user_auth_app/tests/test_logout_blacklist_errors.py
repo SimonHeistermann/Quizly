@@ -1,3 +1,10 @@
+"""
+Logout error-path tests for refresh token blacklisting.
+
+Ensures logout succeeds even if refresh token blacklisting fails unexpectedly,
+and that JWT cookies are still cleared from the response.
+"""
+
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -8,6 +15,10 @@ User = get_user_model()
 
 
 class LogoutBlacklistErrorPathTests(APITestCase):
+    """
+    Tests for logout behavior when refresh token blacklisting raises errors.
+    """
+
     def setUp(self):
         self.login_url = reverse("login")
         self.logout_url = reverse("logout")
@@ -18,6 +29,11 @@ class LogoutBlacklistErrorPathTests(APITestCase):
         )
 
     def _login_and_set_client_cookies(self):
+        """
+        Log in through the API and copy returned JWT cookies into the test client.
+
+        Returns the login response for convenience.
+        """
         resp = self.client.post(
             self.login_url,
             {"username": "blacklistuser", "password": "Password123!"},

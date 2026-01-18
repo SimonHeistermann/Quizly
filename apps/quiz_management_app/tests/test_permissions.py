@@ -1,3 +1,9 @@
+"""
+Permission tests for the quiz management API.
+
+Validates the IsQuizOwner permission's object-level access control behavior.
+"""
+
 import pytest
 from types import SimpleNamespace
 
@@ -6,6 +12,10 @@ from apps.quiz_management_app.api.permissions import IsQuizOwner
 
 @pytest.mark.django_db
 class TestIsQuizOwner:
+    """
+    Tests for the IsQuizOwner object-level permission.
+    """
+
     def test_allows_owner(self, user):
         perm = IsQuizOwner()
         req = SimpleNamespace(user=user)

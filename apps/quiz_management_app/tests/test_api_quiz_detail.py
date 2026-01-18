@@ -1,3 +1,10 @@
+"""
+Tests for the quiz detail API endpoint.
+
+Covers retrieval, authorization, partial updates with strict field validation,
+and deletion behavior.
+"""
+
 import pytest
 from rest_framework import status
 
@@ -6,6 +13,10 @@ from apps.quiz_management_app.models import Quiz
 
 @pytest.mark.django_db
 class TestQuizDetailEndpoint:
+    """
+    Test suite for GET/PATCH/DELETE on /api/quizzes/{id}/.
+    """
+
     def test_get_success(self, auth_client, quiz_with_questions):
         url = f"/api/quizzes/{quiz_with_questions.id}/"
         resp = auth_client.get(url)

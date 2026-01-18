@@ -1,3 +1,12 @@
+"""
+Django settings for the project.
+
+This configuration supports a cookie-based JWT authentication setup
+and multiple modular apps (user_auth_app, quiz_management_app).
+Environment-specific values may be overridden via environment variables.
+"""
+
+
 from pathlib import Path
 import os
 

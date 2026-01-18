@@ -1,3 +1,9 @@
+"""
+Serializers for the user authentication app.
+
+Includes request validation and user creation logic for registration.
+"""
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
@@ -6,6 +12,15 @@ User = get_user_model()
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    """
+    Serializer used to register a new user.
+
+    Validates:
+    - password confirmation
+    - Django password validation rules
+    - email uniqueness (case-insensitive)
+    """
+
     confirmed_password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -18,6 +33,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
+        """
+        Validate registration payload including password rules and email uniqueness.
+        """
         password = attrs.get("password")
         confirmed_password = attrs.get("confirmed_password")
         email = attrs.get("email")
@@ -33,6 +51,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """
+        Create and return a new user instance with a properly hashed password.
+        """
         validated_data.pop("confirmed_password", None)
         password = validated_data.pop("password")
 

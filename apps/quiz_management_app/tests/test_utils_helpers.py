@@ -1,3 +1,11 @@
+"""
+Helper-level utility tests.
+
+Covers small, deterministic helper functions such as:
+- YouTube URL normalization and detection
+- JSON extraction safety logic
+"""
+
 import pytest
 
 from apps.quiz_management_app.utils import (

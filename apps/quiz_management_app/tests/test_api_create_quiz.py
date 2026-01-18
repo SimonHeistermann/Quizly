@@ -1,3 +1,10 @@
+"""
+Tests for the quiz creation API endpoint.
+
+Validates authentication requirements, request validation, error mapping,
+and successful creation responses.
+"""
+
 import pytest
 from typing import Any, cast
 from unittest.mock import patch
@@ -9,6 +16,10 @@ from apps.quiz_management_app.utils import QuizCreationError, InvalidYouTubeUrlE
 
 @pytest.mark.django_db
 class TestCreateQuizEndpoint:
+    """
+    Test suite for POST /api/createQuiz/.
+    """
+
     url = "/api/createQuiz/"
 
     def test_requires_auth(self, api_client):
