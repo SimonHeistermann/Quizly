@@ -2,6 +2,15 @@ FROM python:3.13-slim
 
 WORKDIR /usr/src/app
 
+# -----------------------------
+# System dependencies
+# -----------------------------
+# ffmpeg includes ffprobe (required by yt-dlp + Whisper)
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+     ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
+
 # Copy and install dependencies first (for caching)
 COPY requirements.txt ./
 RUN pip install --upgrade pip

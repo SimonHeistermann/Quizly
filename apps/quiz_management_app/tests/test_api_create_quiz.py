@@ -1,4 +1,5 @@
 import pytest
+from typing import Any, cast
 from unittest.mock import patch
 from rest_framework import status
 
@@ -50,8 +51,11 @@ class TestCreateQuizEndpoint:
         mocked_create.return_value = quiz
 
         resp = auth_client.post(self.url, {"url": "https://www.youtube.com/watch?v=abc"}, format="json")
+
+        quiz_any = cast(Any, quiz)
+
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.data["id"] == quiz.id
+        assert resp.data["id"] == quiz_any.id
         assert resp.data["title"] == "T"
         assert isinstance(resp.data["questions"], list)
         assert len(resp.data["questions"]) == 1

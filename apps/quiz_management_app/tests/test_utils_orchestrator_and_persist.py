@@ -1,5 +1,6 @@
 import pytest
 from types import SimpleNamespace
+from typing import Any, cast
 from unittest.mock import patch
 
 from apps.quiz_management_app.models import Quiz, QuizQuestion
@@ -34,13 +35,19 @@ class TestCreateQuizFromUrl:
         self, mock_ai, mock_transcript, mock_dl, user
     ):
         mock_transcript.return_value = "transcript"
-        mock_ai.return_value = SimpleNamespace(text='{"title":"Generated Title","description":"Generated Desc","questions":' + str(_payload()["questions"]).replace("'", '"') + "}")
+        mock_ai.return_value = SimpleNamespace(
+            text='{"title":"Generated Title","description":"Generated Desc","questions":'
+            + str(_payload()["questions"]).replace("'", '"')
+            + "}"
+        )
 
         quiz = create_quiz_from_url("https://www.youtube.com/watch?v=abc123", user)
 
-        assert Quiz.objects.filter(id=quiz.id).exists()
+        quiz_any = cast(Any, quiz)
+
+        assert Quiz.objects.filter(id=quiz_any.id).exists()
         assert QuizQuestion.objects.filter(quiz=quiz).count() == 10
-        assert quiz.user_id == user.id
+        assert quiz_any.user_id == user.id
 
     @patch("apps.quiz_management_app.utils.download_audio_from_video")
     def test_download_error_becomes_quiz_creation_error(self, mock_dl, user):

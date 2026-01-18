@@ -67,3 +67,8 @@ node_modules/
 .cache
 /.cache/
 /.cache
+
+cookies.txt
+secrets/
+*.cookies.txt
+youtube_cookies.txt

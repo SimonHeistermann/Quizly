@@ -29,4 +29,4 @@ class TestAdmin:
 
         short = q_admin.question_title_short(q)
         assert short.endswith("...")
-        assert len(short) == 53  # 50 + "..."
+        assert len(short) == 53
